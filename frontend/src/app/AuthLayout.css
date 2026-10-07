@@ -1,0 +1,10 @@
+.auth-layout {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-layout-brand {
+  padding: 1rem;
+  font-weight: 600;
+}

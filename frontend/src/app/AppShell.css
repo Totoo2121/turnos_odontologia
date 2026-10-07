@@ -1,0 +1,60 @@
+.shell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.shell-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #ddd;
+}
+
+.shell-brand {
+  font-weight: 600;
+}
+
+.shell-user {
+  margin-left: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.shell-menu-button {
+  display: none;
+}
+
+.shell-nav ul {
+  display: flex;
+  gap: 1rem;
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem 1rem;
+}
+
+.shell-main {
+  padding: 1rem;
+  max-width: 100%;
+}
+
+/* Viewport angosto (spec: ≤480px): la navegación colapsa tras el botón menú. */
+@media (max-width: 480px) {
+  .shell-menu-button {
+    display: inline-block;
+  }
+
+  .shell-nav[data-open="false"] {
+    display: none;
+  }
+
+  .shell-nav ul {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .shell-main {
+    padding: 0.75rem;
+  }
+}

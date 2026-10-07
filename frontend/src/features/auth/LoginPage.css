@@ -1,0 +1,16 @@
+.login {
+  max-width: 24rem;
+  margin: 4rem auto;
+  padding: 1.5rem;
+}
+
+.login-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
+}
+
+.login-error {
+  color: #b3261e;
+}
