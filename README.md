@@ -15,9 +15,13 @@ vía Docker Compose, frontend React 18 + Vite, CI paralela.
 
 ## Arranque
 
+Configurar el entorno local. En `.env`, reemplazar los valores `CHANGEME` por
+claves ficticias de desarrollo; el archivo `.env` está ignorado por Git.
+
 ```bash
 copy .env.example .env
-docker compose up --build
+docker compose up --build -d
+docker compose run --rm api alembic upgrade head
 ```
 
 Verificar salud de la API:
@@ -27,6 +31,35 @@ curl http://localhost:8000/api/health
 ```
 
 Respuesta esperada: `{"status":"ok"}`.
+
+La documentación interactiva de la API (Swagger) queda en
+`http://localhost:8000/docs`.
+
+### Levantar el frontend
+
+En otra terminal, desde la raíz del repositorio:
+
+```powershell
+Set-Location .\frontend
+npm ci
+npm.cmd run dev
+```
+
+Abrir `http://localhost:5173`.
+
+### Preparar datos ficticios para la demostración
+
+`ADMIN_INITIAL_PASSWORD` debe tener una contraseña ficticia fuerte definida en
+`.env`. El seed crea el tenant `demo-ficticia` y el usuario
+`admin@demo-ficticia.invalid`; C-03 toma la contraseña desde esa variable.
+
+```powershell
+docker compose run --rm api python -m app.infrastructure.seed_c03
+$tenantId = (docker compose exec -T postgres psql -U turnos -d turnos -tAc "SELECT id FROM tenant WHERE slug_reserva='demo-ficticia'").Trim()
+docker compose run --rm -e "TENANT_ID=$tenantId" api python -m app.infrastructure.seed_catalogo
+```
+
+Los seeds son ficticios e idempotentes. No cargar datos reales de pacientes.
 
 ## Notificaciones WhatsApp (C-11)
 
