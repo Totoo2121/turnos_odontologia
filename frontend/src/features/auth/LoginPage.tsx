@@ -13,6 +13,7 @@ export function LoginPage(): JSX.Element {
   const status = useAuthStore((s) => s.status);
   const navigate = useNavigate();
   const location = useLocation();
+  const [tenantSlug, setTenantSlug] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +23,7 @@ export function LoginPage(): JSX.Element {
   async function handleSubmit(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault();
     setError(null);
-    const result = await login(email, password);
+    const result = await login(tenantSlug, email, password);
     if (result.ok) {
       const state = location.state as LoginLocationState | null;
       const roles = useAuthStore.getState().user?.roles ?? [];
@@ -36,6 +37,18 @@ export function LoginPage(): JSX.Element {
     <section className="login" aria-labelledby="login-title">
       <h1 id="login-title">Ingresar</h1>
       <form onSubmit={(e) => void handleSubmit(e)}>
+        <div className="login-field">
+          <label htmlFor="login-tenant">Clínica (slug)</label>
+          <input
+            id="login-tenant"
+            name="tenant_slug"
+            type="text"
+            autoComplete="organization"
+            value={tenantSlug}
+            onChange={(e) => setTenantSlug(e.target.value)}
+            required
+          />
+        </div>
         <div className="login-field">
           <label htmlFor="login-email">Email</label>
           <input

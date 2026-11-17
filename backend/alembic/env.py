@@ -13,6 +13,7 @@ from alembic import context
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+import app.domain  # noqa: E402,F401 - register domain tables on shared metadata
 from app.shared.db import metadata  # noqa: E402
 from app.shared.settings import get_settings  # noqa: E402
 

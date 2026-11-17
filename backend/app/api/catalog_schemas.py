@@ -40,6 +40,7 @@ class PrestacionCreate(BaseModel):
     monto_sena: Decimal | None = Field(default=None)
     anticipacion_min_cancel_hs: int = Field(default=24, ge=0)
     precio: Decimal | None = Field(default=None, ge=0)
+    requiere_consentimiento: bool = False
 
     _monto = field_validator("monto_sena")(  # type: ignore[misc]
         lambda cls, v: _monto_positivo(v, field="monto")
@@ -68,6 +69,7 @@ class PrestacionUpdate(BaseModel):
     monto_sena: Decimal | None = Field(default=None)
     anticipacion_min_cancel_hs: int | None = Field(default=None, ge=0)
     precio: Decimal | None = Field(default=None, ge=0)
+    requiere_consentimiento: bool | None = None
 
     _monto = field_validator("monto_sena")(  # type: ignore[misc]
         lambda cls, v: _monto_positivo(v, field="monto")
@@ -97,6 +99,9 @@ class PrestacionRead(BaseModel):
     monto_sena: Decimal | None
     anticipacion_min_cancel_hs: int
     precio: Decimal | None
+    requiere_consentimiento: bool = False
+    # C-15: recall interval consumed by the ficha to suggest the next control.
+    intervalo_control_dias: int | None = None
     is_active: bool
 
 

@@ -1,0 +1,41 @@
+{
+  "fecha": "2026-11-16",
+  "servidor": {
+    "paquete": "@microsoft/postgres-mcp",
+    "version": "0.3.0",
+    "transport": "stdio"
+  },
+  "base": {
+    "tipo": "PostgreSQL temporal local de prueba",
+    "version": "18",
+    "database": "turnos",
+    "alembic_head": "f18a1b2c3d4e5",
+    "datos_de_pacientes": false,
+    "perfil_mcp": "tpi-local",
+    "access_mode": "ro"
+  },
+  "herramientas": [
+    "postgres_mcp_list_connection_profiles",
+    "postgres_mcp_connect",
+    "postgres_mcp_query",
+    "postgres_mcp_disconnect"
+  ],
+  "query": "SELECT conname, contype, pg_get_constraintdef(oid) AS definition FROM pg_constraint WHERE conrelid = 'public.turno'::regclass AND contype = 'x' ORDER BY conname",
+  "resultado": [
+    {
+      "conname": "excl_turno_profesional",
+      "contype": "x",
+      "definition": "EXCLUDE USING gist (profesional_id WITH =, tstzrange(inicio, fin) WITH &&) WHERE (estado <> 'cancelado')"
+    },
+    {
+      "conname": "excl_turno_sillon",
+      "contype": "x",
+      "definition": "EXCLUDE USING gist (sillon_id WITH =, tstzrange(inicio, fin) WITH &&) WHERE (estado <> 'cancelado')"
+    }
+  ],
+  "verificacion_permisos": {
+    "query": "SELECT current_user, has_table_privilege(current_user, 'public.turno', 'SELECT') AS can_select, has_table_privilege(current_user, 'public.turno', 'INSERT') AS can_insert",
+    "resultado": "tpi_mcp_ro, can_select=True, can_insert=False"
+  },
+  "limite": "Inspección de metadatos; todavía no se ejecutó una inserción conflictiva. Eso queda en C-19."
+}

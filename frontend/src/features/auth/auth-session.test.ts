@@ -72,10 +72,10 @@ describe("auth-store logout/hydrate (RED 2.3)", () => {
     const fetchImpl = vi.fn(async (input: string | URL | Request) => {
       expect(String(input)).toMatch(/\/api\/auth\/me$/);
       return jsonResponse(200, {
-        id: "u-ficticia-5",
+        sub: "u-ficticia-5",
         email: "odonto@ficticio.test",
         roles: ["odontologo"],
-        tenantId: "t-ficticio-1",
+        tenant_id: "t-ficticio-1",
       });
     });
     vi.stubGlobal("fetch", fetchImpl);

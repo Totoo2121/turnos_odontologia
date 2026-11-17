@@ -16,10 +16,10 @@ def test_celery_app_uses_redis_broker() -> None:
     assert "redis" in celery_app.conf.broker_url
 
 
-def test_celery_scaffold_has_no_beat_and_no_real_tasks() -> None:
-    """WHEN worker app inspected THEN no beat schedule and no domain tasks."""
+def test_celery_app_registers_c10_vencimiento_job() -> None:
+    """WHEN worker app inspected THEN C-10 job is registered and scheduled."""
+    import app.worker.tasks  # noqa: F401  (registra el task en Celery)
     from app.worker.celery_app import celery_app
 
-    assert not celery_app.conf.beat_schedule
-    registered = set(celery_app.tasks.keys())
-    assert not any(k.startswith("app.domain") for k in registered)
+    assert "app.worker.tasks.vencer_ordenes_sin_acreditar" in celery_app.tasks
+    assert "c10-vencer-ordenes-sin-acreditar" in celery_app.conf.beat_schedule

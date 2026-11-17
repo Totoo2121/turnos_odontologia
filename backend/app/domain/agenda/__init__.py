@@ -2,6 +2,7 @@
 
 from app.domain.agenda.models import (  # noqa: F401
     Bloqueo,
+    ListaEspera,
     Prestacion,
     Profesional,
     ProfesionalPrestacion,

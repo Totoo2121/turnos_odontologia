@@ -35,7 +35,8 @@ C-01 foundation-setup
               │           │     ├── C-15 (ver arriba)
               │           │     ├── C-16 caja-reportes             ← + C-14
               │           │     └── C-17 auditoria-exportacion     ← + C-14
-              │           └── C-11 notificaciones-whatsapp
+              │           ├── C-11 notificaciones-whatsapp
+              │           └── C-19 verificacion-postgres-agenda ← + C-15
               │
               └── C-12 pacientes-hce
                     └── C-13 odontograma-adjuntos
@@ -44,6 +45,13 @@ C-01 foundation-setup
                                 ├── C-16 (ver arriba)
                                 ├── C-17 (ver arriba)
                                 └── C-18 esquema-etapa2-reserva [E2, fuera del MVP]
+```
+
+Change transversal posterior a las pantallas funcionales:
+
+```
+C-20 refinamiento-visual-frontend ← requiere C-04 + C-07 + C-15 + C-16 + C-17
+C-21 admin-funcional ← requiere C-17 + C-20
 ```
 
 ### Paralelismo por fase
@@ -84,8 +92,17 @@ GATE 7: C-09 + C-11 + C-14 ✓       ← JOIN pre-cierre MVP
   → C-16 caja-reportes             [Agente B]
   → C-17 auditoria-exportacion     [Agente C]
 
-GATE 8: MVP completo ✓
+GATE 8: C-06 + C-15 ✓
+  → C-19 verificacion-postgres-agenda [Pendiente — verificación PostgreSQL]
+
+GATE 9: MVP completo ✓
   → C-18 esquema-etapa2-reserva    [Agente A — fuera del MVP]
+
+GATE 10: C-04 + C-07 + C-15 + C-16 + C-17 ✓
+  → C-20 refinamiento-visual-frontend [pendiente — experiencia visual]
+
+GATE 11: C-17 + C-20 ✓
+  → C-21 admin-funcional [panel de gestión del propietario]
 ```
 
 ### Camino crítico (8 changes — mínimo irreducible)
@@ -109,7 +126,10 @@ Paso │ Agente A (Backend Core)      │ Agente B (Backend Aux)       │ Agent
   6  │ C-08 turnero-online-publico  │ C-10 cobros-mercadopago      │ C-07 agenda-mostrador-ui
   7  │ C-09 lista-espera-autorelleno│ C-11 notificaciones-whatsapp │ C-14 presupuestos-planes
   8  │ C-15 clinica-caja-ui         │ C-16 caja-reportes           │ C-17 auditoria-exportacion
-  9  │ C-18 esquema-etapa2-reserva  │         —                    │         —
+  9  │ C-19 verificacion-postgres-agenda │         —                  │         —
+ 10  │ C-18 esquema-etapa2-reserva  │         —                    │         —
+ 11  │              —               │         —                    │ C-20 refinamiento-visual-frontend
+ 12  │              —               │         —                    │ C-21 admin-funcional
 ```
 
 ---
@@ -219,9 +239,8 @@ Paso │ Agente A (Backend Core)      │ Agente B (Backend Aux)       │ Agent
 ---
 
 ### [C-06] `turnos-antissolapamiento`
-- **Estado**: `[ ]` pendiente
+- **Estado**: `[x]` completado (archivado 2026-11-12)
 - **Scope**: Núcleo de turnos con anti-solapamiento en base + ciclo de vida + sobreturnos (US-002, US-003)
-  - Modelo `Turno`: `paciente_id`, `profesional_id`, `sillon_id`, `prestacion_id`, `inicio`, `fin = inicio + duracion + buffer` (RN-AG-03), `estado (reservado|confirmado|en_sala|atendido|cancelado|ausente)`, `origen (mostrador|online|wa|lista_espera)`, `token_portal`, flag `sobreturno`
   - Constraints de exclusión Postgres por (`profesional_id`, rango) y (`sillon_id`, rango) — RN-AG-01/02 garantizadas en base, nunca solo en código
   - Endpoints: `POST /turnos` (rechaza solape/bloqueo con motivo RN-AG-05), `PATCH /turnos/{id}/estado`, `POST /turnos/{id}/reprogramar` (valida RN-AG-01/02/05 en destino, traslada seña RN-AG-07), `POST /turnos/{id}/cancelar` (antelación por prestación RN-AG-08), `POST /turnos/sobreturno` (solo `permite_sobreturno` + rol recepción o superior RN-AG-06/RN-G-03, marcado visible, sin grilla)
   - `GET /turnos/agenda?vista=dia|semana&profesional_id|sillon_id` con estados y estado de cobro visible (patrón FLAP)
@@ -229,6 +248,7 @@ Paso │ Agente A (Backend Core)      │ Agente B (Backend Aux)       │ Agent
   - Tests: solape profesional y sillón rechazados a nivel DB, bloqueo rechaza con motivo, sobreturno sin permiso denegado, reprogramación traslada seña, 409 ante carrera por el mismo hueco
 - **Dependencias**: C-05
 - **Governance**: CRITICO
+- **Deuda explícita (detectada en C-15)**: `POST /turnos/{id}/reprogramar` y `POST /turnos/sobreturno` no están implementados; C-15 solo cierra el turno como `atendido` y agenda el control. Quedan pendientes para cerrar el alcance original de C-06 (RN-AG-06/07).
 - **Leer antes**:
   - `knowledge-base/04_modelo_de_datos.md` §turno
   - `knowledge-base/05_reglas_de_negocio.md` §RN-AG-01 + §RN-AG-02 + §RN-AG-06 + §RN-AG-07 + §RN-AG-08 + §RN-G-03
@@ -238,8 +258,7 @@ Paso │ Agente A (Backend Core)      │ Agente B (Backend Aux)       │ Agent
 ---
 
 ### [C-07] `agenda-mostrador-ui`
-- **Estado**: `[ ]` pendiente
-- **Scope**: Agenda del mostrador — vistas día/semana + operatoria de recepción (frontend de US-002/US-003)
+- **Estado**: `[x]` completado (archivado 2026-11-12)
   - `features/agenda`: vista día y semana por profesional y por sillón, con estados y cobros visibles
   - Crear turno solo en huecos válidos (solape/bloqueo rechazados con mensaje + motivo), sobreturno con confirmación de rol
   - Acciones: confirmar, en-sala, atender, cancelar, reprogramar, marcar ausente — contra endpoints de C-06
@@ -255,8 +274,7 @@ Paso │ Agente A (Backend Core)      │ Agente B (Backend Aux)       │ Agent
 ---
 
 ### [C-08] `turnero-online-publico`
-- **Estado**: `[ ]` pendiente
-- **Scope**: Reserva online 24/7 por enlace + portal del paciente (US-010)
+- **Estado**: `[x]` completado (archivado 2026-11-12)
   - `GET /reservar/{slug}` (público, rate-limit + captcha, sin cuenta — nombre + WhatsApp válido RN-TU-01): prestaciones → profesionales habilitados → huecos válidos
   - `POST /reservar/{slug}/turnos` — crea `reservado`; carrera por hueco → 409 + alternativas + oferta de lista de espera (Flujo 1)
   - `GET /p/{token}` + `POST /p/{token}/cancelar|reprogramar` hasta `anticipacion_min_cancel_hs` (RN-TU-03); política de cancelación visible al reservar
@@ -275,8 +293,7 @@ Paso │ Agente A (Backend Core)      │ Agente B (Backend Aux)       │ Agent
 ---
 
 ### [C-09] `lista-espera-autorelleno`
-- **Estado**: `[ ]` pendiente
-- **Scope**: Lista de espera con oferta por orden y auto-relleno (US-012)
+- **Estado**: `[x]` completado (archivado 2026-11-13)
   - Modelo `ListaEspera`: `paciente_id`, `prestacion_id`, `profesional_id?`, `franja_preferida`, `estado (activa|ofrecida|convertida|vencida)`
   - Endpoints: `POST /lista-espera`, `GET /lista-espera`, worker ante hueco liberado: ofrece al compatible más antiguo (RN-TU-05) con vencimiento → pasa al siguiente; aceptación → turno normal con todas sus reglas
   - Migración 005: tabla `lista_espera`
@@ -296,8 +313,7 @@ Paso │ Agente A (Backend Core)      │ Agente B (Backend Aux)       │ Agent
 > C-10 y C-11 son independientes entre sí (ambos dependen solo de C-06): pueden proponerse en paralelo.
 
 ### [C-10] `cobros-mercadopago`
-- **Estado**: `[ ]` pendiente
-- **Scope**: Señas con Mercado Pago vinculadas al turno + caja de mostrador backend (US-011, parte cobros de US-040)
+- **Estado**: `[x]` completado (archivado 2026-11-13)
   - `POST /turnos/{id}/orden-senia` — crea orden MP si `seña_obligatoria`; turno queda `reservado-pendiente-pago` (RN-TU-04)
   - `POST /webhooks/mercadopago` (firma MP) — acredita o vence: acreditada → `confirmado`; vencida/sin pago → anula y libera hueco (RN-AD-04, RN-G-02: la agenda manda)
   - Idempotencia por `mp_payment_id` único ante IPN duplicado (Flujo 4); cancelación en término devuelve seña o la deja como crédito según política (RN-AD-03)
@@ -316,7 +332,7 @@ Paso │ Agente A (Backend Core)      │ Agente B (Backend Aux)       │ Agent
 ---
 
 ### [C-11] `notificaciones-whatsapp`
-- **Estado**: `[ ]` pendiente
+- **Estado**: `[x]` completado (archivado 2026-11-14)
 - **Scope**: Automatización WhatsApp Business API full-cycle + email fallback + worker (US-020, US-021)
   - Infra `whatsapp_bsp` (Business API oficial del tenant — nunca números personales ni API no oficial RN-NO-05) + `smtp`; plantillas aprobadas versionadas
   - Worker (Celery + Redis o APScheduler): recordatorios T-48h/T-24h configurables (`REMINDER_T48H_HS`, `REMINDER_T24H_HS`) por WA + email respaldo (RN-NO-01); registra `recordatorio` enviado
@@ -341,7 +357,7 @@ Paso │ Agente A (Backend Core)      │ Agente B (Backend Aux)       │ Agent
 > C-12 es independiente de la FASE 2 (solo depende de C-03): puede proponerse en paralelo con C-05.
 
 ### [C-12] `pacientes-hce`
-- **Estado**: `[ ]` pendiente
+- **Estado**: `[x]` completado (archivado 2026-11-14)
 - **Scope**: Pacientes + historia clínica única con evoluciones append-only (US-030)
   - Modelos: `Paciente` (nombre, dni?, teléfono WA, obra_social? reservado, `consentimiento_datos` bool + fecha), `HistoriaClinica` (1 por paciente por tenant), `Evolucion` append-only con autor + fecha (corrección = nueva entrada que referencia la anterior RN-HC-01)
   - Endpoints: CRUD `/pacientes`, `/historias-clinicas`, `POST /historias-clinicas/{id}/evoluciones` (sin edición destructiva)
@@ -360,7 +376,7 @@ Paso │ Agente A (Backend Core)      │ Agente B (Backend Aux)       │ Agent
 ---
 
 ### [C-13] `odontograma-adjuntos`
-- **Estado**: `[ ]` pendiente
+- **Estado**: `[x]` completado (archivado 2026-11-15)
 - **Scope**: Odontograma FDI por eventos + adjuntos RX/fotos + consentimientos firmados (US-031, consentimientos de US-032)
   - Modelo `Odontograma` (1 por historia) + `EventoPieza`: pieza FDI + superficie + estado (`sano|caries|obturación|corona|endodoncia|extracción|implante|sellador`) + fecha + autor (RN-HC-02)
   - Endpoints: `GET /odontogramas/{historia_id}`, `POST /odontogramas/{historia_id}/eventos`, `POST /historias-clinicas/{id}/adjuntos` (rx|foto|documento → storage privado con URLs firmadas; adjuntos a la historia, nunca al turno RN-HC-05)
@@ -379,7 +395,7 @@ Paso │ Agente A (Backend Core)      │ Agente B (Backend Aux)       │ Agent
 ---
 
 ### [C-14] `presupuestos-planes`
-- **Estado**: `[ ]` pendiente
+- **Estado**: `[x]` completado (2026-11-16)
 - **Scope**: Presupuestos sobre odontograma → plan por etapas + deuda en cuenta corriente (US-032)
   - Modelo `Presupuesto`: items (prestación + pieza + importe ARS RN-AD-01), total, `estado (borrador|enviado|aceptado|rechazado)`, `validez_hasta`; enlaza a piezas del odontograma (patrón Bilog RN-HC-03)
   - Aceptación → genera `PlanTratamiento` por etapas + deuda exigible en cuenta corriente del paciente (RN-AD-02)
@@ -398,12 +414,14 @@ Paso │ Agente A (Backend Core)      │ Agente B (Backend Aux)       │ Agent
 ---
 
 ### [C-15] `clinica-caja-ui`
-- **Estado**: `[ ]` pendiente
+- **Estado**: `[x]` completado (2026-11-16)
 - **Scope**: Frontend clínico + cobro de saldos en mostrador (UI de US-030/031/032 y cobros de C-10/C-14)
   - `features/clinica`: HCE + evoluciones (solo lectura según rol), odontograma FDI interactivo por pieza/superficie, adjuntos RX/fotos, armado y envío de presupuestos, firma de consentimientos
   - `features/caja` (mostrador): deuda/turno con estado de cobro MP, cobro de saldo (efectivo/transferencia/MP) + recibo, cierre de caja diario vs. turnos atendidos
   - Cierre de turno como `atendido` + agenda de control (recall futuro) desde la ficha
-  - Tests: odontograma interactivo, presupuesto→aceptar, cobro de saldo, guards (recepción no edita clínica)
+  - Backend aditivo sin migración: pagos manuales append-only, recibo PDF y cierre de caja (`alembic heads` sigue en `d14a1b2c3d4e5`)
+  - Tests: odontograma interactivo, presupuesto→aceptar, cobro de saldo, guards (recepción no edita clínica), E2E Flujo 3 y Flujo 4
+- **Deuda explícita**: la reprogramación y el alta de sobreturnos siguen pendientes en C-06 (ver nota en esa sección); C-15 no los implementa.
 - **Dependencias**: C-14, C-10, C-04
 - **Governance**: MEDIO
 - **Leer antes**:
@@ -417,10 +435,10 @@ Paso │ Agente A (Backend Core)      │ Agente B (Backend Aux)       │ Agent
 ## FASE 5 — Cierre MVP
 
 ### [C-16] `caja-reportes`
-- **Estado**: `[ ]` pendiente
+- **Estado**: `[x]` completado (2026-11-16)
 - **Scope**: Reportes operativos del dueño + cierre de caja (resto de US-040)
-  - `GET /reportes/ocupacion`, `/ausentismo` (cancelaciones/ausencias), `/recaudacion` (por profesional, incluye señas pendientes y deuda de planes si C-14 ✓), `/senias-pendientes`
-  - Agregaciones multi-tenant eficientes (índices de 004); `R total` vs `R operativo` vs `R propio` según rol
+  - `GET /reportes/ocupacion`, `/ausentismo` (cancelaciones/ausencias), `/recaudacion` (por profesional, incluye señas acreditadas y deuda de planes si C-14 ✓), `/senias-pendientes`
+  - Agregaciones multi-tenant eficientes (índices de 004); `R total` vs `R operativo` vs `R propio` según rol. Se reportan minutos ocupados; el porcentaje de capacidad queda pendiente de configurar jornadas por profesional.
   - UI de reportes en `features/reportes` (densidad profesional bien resuelta, referencia CareStack/Curve)
   - Tests: cifras cuadran con turnos/cobros seed, scoping por tenant y por rol
 - **Dependencias**: C-10, C-14
@@ -434,7 +452,7 @@ Paso │ Agente A (Backend Core)      │ Agente B (Backend Aux)       │ Agent
 ---
 
 ### [C-17] `auditoria-exportacion`
-- **Estado**: `[ ]` pendiente
+- **Estado**: `[x]` completado (2026-11-16)
 - **Scope**: Auditoría append-only + exportación total de datos (US-041, diferencial DD-06)
   - Middleware/decorador de auditoría: accesos a HCE, cambios de agenda, cobros, exportaciones → tabla `audit_evento` append-only (RN-SE-05)
   - `POST /admin/exportacion` → worker genera paquete (pacientes, turnos, HCE, cobros) en formato abierto + descarga con evento auditado (Flujo 6, RN-SE-04)
@@ -451,14 +469,31 @@ Paso │ Agente A (Backend Core)      │ Agente B (Backend Aux)       │ Agent
 
 ---
 
+### [C-19] `verificacion-postgres-agenda`
+- **Estado**: `[ ]` pendiente (preparado para implementación)
+- **Scope**: Pruebas de integración sobre PostgreSQL real para demostrar las restricciones anti-solapamiento de C-06; sin cambios de esquema ni de reglas de negocio.
+  - Fixture aislado con `TEST_DATABASE_URL`, migrado a `head` y datos sintéticos.
+  - Verificar intervalos contiguos, conflicto de profesional, conflicto de sillón entre profesionales y liberación del rango cancelado.
+  - Comprobar que `IntegrityError` se transforma en HTTP 409 y no deja escrituras parciales.
+- **Dependencias**: C-06, C-15 (archivados)
+- **Governance**: ALTO
+- **Leer antes**:
+  - `knowledge-base/04_modelo_de_datos.md` §turno / bloqueo
+  - `knowledge-base/05_reglas_de_negocio.md` §RN-AG-01..08 + §RN-G-02/03
+  - `knowledge-base/10_preguntas_abiertas.md` (no introducir política nueva)
+  - `openspec/changes/archive/2026-11-12-c-06-turnos-antissolapamiento/`
+- **Preparación actual**: propuesta, diseño, cuatro escenarios y tareas en `openspec/changes/c-19-verificacion-postgres-agenda/`. No implementado, no verificado como funcionalidad y no archivado.
+
+---
+
 ## FASE 6 — Etapa 2: preparación (fuera del MVP)
 
 > Los changes de esta fase NO entran en el camino crítico ni en el GATE del MVP. Reservan esquema y dejan stubs para no bloquear la etapa 2 (FE ARCA, OO.SS., ReNaPDiS, IA, marketplace, API pública).
 
 ### [C-18] `esquema-etapa2-reserva`
-- **Estado**: `[ ]` pendiente
+- **Estado**: `[x]` completado (2026-11-16)
 - **Scope**: Reserva de esquema etapa 2 sin implementar integraciones (US-042 + Épica 6 como alcance declarado no-MVP)
-  - Migración 012 (solo columnas/tablas reservadas, sin lógica): `paciente.obra_social`, tablas stub `nomenclador`, `comprobante_fiscal` (RN-AD-05)
+  - Migración 012: tablas stub `nomenclador`, `comprobante_fiscal` (RN-AD-05). `paciente.obra_social` ya existía desde C-12 y no se altera.
   - Stubs documentados (endpoints 501 + ADRs): FE ARCA, liquidaciones OO.SS./prepagas, recetario ReNaPDiS (moat ClinIA #248), IA práctica (notas por voz, no-show scoring), perfil público/reseñas, API pública, radiología/laboratorio
   - ADR que declara qué queda explícitamente fuera de v1.0 (DD-02) y el plan de activación por stub
   - Tests: columnas reservadas existen y son nulables (no rompen MVP), stubs responden 501 con mensaje de etapa
@@ -469,3 +504,43 @@ Paso │ Agente A (Backend Core)      │ Agente B (Backend Aux)       │ Agent
   - `knowledge-base/06_funcionalidades.md` §US-042 + §Épica 6 (diferenciadores futuros)
   - `knowledge-base/09_decisiones_y_supuestos.md` §DD-02
   - `knowledge-base/10_preguntas_abiertas.md` (E2: API pública, periodontograma, Google Calendar)
+
+---
+
+## FASE 7 — Experiencia visual del frontend
+
+### [C-20] `refinamiento-visual-frontend`
+- **Estado**: `[x]` completado y archivado (16/11/2026)
+- **Scope**: Unificar el diseño minimalista y clínico de todas las superficies frontend con tokens compartidos, paleta verde petróleo/turquesa/menta y controles consistentes.
+  - Aplicar al shell, login, agenda, pacientes y pestañas de ficha, caja, reportes, reserva pública, portal y placeholders visibles.
+  - Mejorar jerarquía, legibilidad, responsive y estados semánticos sin cambiar flujos ni permisos.
+  - Verificar contraste WCAG AA, foco/teclado, zoom y `prefers-reduced-motion`.
+- **Dependencias**: C-04, C-07, C-15, C-16 y C-17 (archivados)
+- **Governance**: MEDIO
+- **Leer antes**:
+  - `knowledge-base/03_actores_y_roles.md` (navegación por rol)
+  - `knowledge-base/06_funcionalidades.md` (flujos que deben conservarse)
+  - `knowledge-base/08_arquitectura_propuesta.md` §Frontend
+  - `openspec/changes/archive/2026-10-03-c-04-app-shell-frontend/`
+  - `openspec/changes/archive/2026-11-16-c-15-clinica-caja-ui/`
+- **Estado actual**: implementación visual terminada; suite frontend (27 archivos, 108 tests) y build de producción aprobados. Responsive, teclado, foco visible y movimiento reducido revisados. Change archivado en `openspec/changes/archive/2026-11-16-c-20-refinamiento-visual-frontend/`. El placeholder de Admin se reemplaza por el panel funcional de C-21.
+
+---
+
+## FASE 8 — Administración del propietario
+
+### [C-21] `admin-funcional`
+- **Estado**: `[x]` completado y archivado (16/11/2026)
+- **Scope**: panel de administración del propietario para el MVP.
+  - Perfil editable de clínica (nombre y moneda ARS; slug y plan protegidos).
+  - Listado y alta tenant-scoped de usuarios con roles odontólogo, recepción o asistente; contraseñas iniciales Argon2id.
+  - Consulta tenant-scoped de auditoría y solicitud/estado/descarga autenticada de exportaciones.
+  - Sin cambios de esquema: usa tablas existentes, RBAC propietario y FORCE RLS.
+- **Verificación**: 5 tests del API C-21 + 1 regresión de auditoría; suite backend 655 pasaron/19 omitidas; suite frontend 109 pasaron; build de producción y Ruff/Black aprobados.
+- **Dependencias**: C-17 y C-20 (archivados)
+- **Governance**: ALTO (cuentas y datos administrativos)
+- **Leer antes**:
+  - `knowledge-base/03_actores_y_roles.md` §RBAC
+  - `knowledge-base/04_modelo_de_datos.md` §Tenant/Usuario/Rol
+  - `knowledge-base/05_reglas_de_negocio.md` §RN-SE-04/05
+- **OpenSpec**: `openspec/changes/archive/2026-11-16-c-21-admin-funcional/`

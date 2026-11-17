@@ -26,10 +26,10 @@ describe("auth-store login (RED 2.1)", () => {
       }
       if (url.endsWith("/api/auth/me")) {
         return jsonResponse(200, {
-          id: "u-ficticia-1",
+          sub: "u-ficticia-1",
           email: "recepcion@ficticio.test",
           roles: ["recepcion"],
-          tenantId: "t-ficticio-1",
+          tenant_id: "t-ficticio-1",
         });
       }
       throw new Error(`unexpected fetch: ${url}`);
@@ -44,7 +44,7 @@ describe("auth-store login (RED 2.1)", () => {
       error: null,
     });
 
-    const result = await useAuthStore.getState().login("recepcion@ficticio.test", "Secreta123");
+    const result = await useAuthStore.getState().login("clinica-ficticia", "recepcion@ficticio.test", "Secreta123");
 
     expect(result.ok).toBe(true);
     const state = useAuthStore.getState();
@@ -69,7 +69,7 @@ describe("auth-store login (RED 2.1)", () => {
       error: null,
     });
 
-    const result = await useAuthStore.getState().login("nadie@ficticio.test", "Wrong123");
+    const result = await useAuthStore.getState().login("clinica-ficticia", "nadie@ficticio.test", "Wrong123");
 
     expect(result.ok).toBe(false);
     if (result.ok) {
@@ -116,10 +116,11 @@ describe("auth-store login (RED 2.1)", () => {
 
     const result = await useAuthStore
       .getState()
-      .login("  RECEPCION@Ficticio.TEST  ", "Secreta123");
+      .login(" clinica-ficticia ", "  RECEPCION@Ficticio.TEST  ", "Secreta123");
 
     expect(result.ok).toBe(true);
     expect(sentBody).toEqual({
+      tenant_slug: "clinica-ficticia",
       email: "recepcion@ficticio.test",
       password: "Secreta123",
     });
@@ -140,7 +141,7 @@ describe("auth-store login (RED 2.1)", () => {
       error: null,
     });
 
-    const result = await useAuthStore.getState().login("alguien@ficticio.test", "Secreta123");
+    const result = await useAuthStore.getState().login("clinica-ficticia", "alguien@ficticio.test", "Secreta123");
 
     expect(result).toEqual({
       ok: false,

@@ -18,12 +18,24 @@ import { NotFound } from "../pages/NotFound";
  * custom error response) antes de exponer estas rutas.
  */
 
-const AgendaPage = lazy(() => import("../pages/AgendaPlaceholder"));
-const PacientesPage = lazy(() => import("../pages/PacientesPlaceholder"));
-const PacienteDetallePage = lazy(() => import("../pages/PacienteDetallePlaceholder"));
-const CajaPage = lazy(() => import("../pages/CajaPlaceholder"));
-const ReportesPage = lazy(() => import("../pages/ReportesPlaceholder"));
-const AdminPage = lazy(() => import("../pages/AdminPlaceholder"));
+const AgendaPage = lazy(() => import("../features/agenda/AgendaPage").then((m) => ({ default: m.AgendaPage })));
+const ReservarPage = lazy(() => import("../pages/ReservarPage").then((m) => ({ default: m.ReservarPage })));
+const PortalTurnoPage = lazy(() => import("../pages/PortalTurnoPage").then((m) => ({ default: m.PortalTurnoPage })));
+const PacientesPage = lazy(() =>
+  import("../features/clinica/PacientesPage").then((m) => ({
+    default: m.PacientesPage,
+  })),
+);
+const PacienteDetallePage = lazy(() =>
+  import("../features/clinica/PacienteFichaPage").then((m) => ({
+    default: m.PacienteFichaPage,
+  })),
+);
+const CajaPage = lazy(() =>
+  import("../features/caja/CajaPage").then((m) => ({ default: m.CajaPage })),
+);
+const ReportesPage = lazy(() => import("../features/reportes/ReportesPage").then((m) => ({ default: m.ReportesPage })));
+const AdminPage = lazy(() => import("../pages/AdminPage"));
 
 function RouteFallback(): JSX.Element {
   return <p>Cargando…</p>;
@@ -106,6 +118,22 @@ export function AppRoutes(): JSX.Element {
         <Route path="/403" element={<Forbidden />} />
         <Route path="*" element={<NotFound />} />
       </Route>
+      <Route
+        path="/reservar/:slug"
+        element={
+          <Suspense fallback={<RouteFallback />}>
+            <ReservarPage />
+          </Suspense>
+        }
+      />
+      <Route
+        path="/p/:token"
+        element={
+          <Suspense fallback={<RouteFallback />}>
+            <PortalTurnoPage />
+          </Suspense>
+        }
+      />
       <Route path="/" element={<Navigate to="/agenda" replace />} />
     </Routes>
   );

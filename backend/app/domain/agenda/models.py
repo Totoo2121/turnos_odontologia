@@ -157,11 +157,23 @@ class Prestacion(AuditMixin, Base):
         Integer, nullable=False, default=24, server_default=text("24")
     )
     precio: Mapped[float | None] = mapped_column(Numeric(12, 2), nullable=True)
+    # C-11 (RN-NO-04): interval between periodic follow-up appointments.
+    intervalo_control_dias: Mapped[int | None] = mapped_column(
+        Integer, nullable=True
+    )
+    # C-14 (RN-HC-04): a budget item inherits this flag as a snapshot.
+    requiere_consentimiento: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=text("false")
+    )
 
     __table_args__ = (
         UniqueConstraint("tenant_id", "nombre", name="uq_prestacion_tenant_nombre"),
         CheckConstraint("duracion_min > 0", name="duracion_min_pos"),
         CheckConstraint("buffer_min >= 0", name="buffer_min_nonneg"),
+        CheckConstraint(
+            "intervalo_control_dias IS NULL OR intervalo_control_dias > 0",
+            name="intervalo_control_dias_pos",
+        ),
     )
 
 
@@ -256,4 +268,169 @@ class Bloqueo(AuditMixin, Base):
             "profesional_id IS NOT NULL OR sillon_id IS NOT NULL",
             name="bloqueo_al_menos_un_objetivo",
         ),
+    )
+
+
+class Turno(Base):
+    """Appointment with anti-overlap guaranteed at DB level (RN-AG-01/02)."""
+
+    __tablename__ = "turno"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+        server_default=text("gen_random_uuid()"),
+    )
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("tenant.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    paciente_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("paciente.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    profesional_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("profesional.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    sillon_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("sillon.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    prestacion_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("prestacion.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    inicio: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    fin: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    estado: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="pendiente", server_default=text("'pendiente'")
+    )
+    origen: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="recepcion", server_default=text("'recepcion'")
+    )
+    token_portal: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    sobreturno: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default=text("false")
+    )
+    sena_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True), nullable=True
+    )
+    mp_order_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    # C-11: contact snapshot captured at booking time (C-12 not available yet).
+    contacto_whatsapp: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    contacto_email: Mapped[str | None] = mapped_column(String(320), nullable=True)
+    # C-11 (RN-NO-02): audited WhatsApp confirmation instant.
+    confirmado_at: Mapped[datetime.datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    __table_args__ = (
+        CheckConstraint("fin > inicio", name="turno_fin_despues_inicio"),
+    )
+
+
+class ListaEspera(Base):
+    """Waitlist entry: patient waiting for a compatible slot (C-09)."""
+
+    __tablename__ = "lista_espera"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+        server_default=text("gen_random_uuid()"),
+    )
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("tenant.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    paciente_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("paciente.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    prestacion_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("prestacion.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    profesional_id: Mapped[uuid.UUID | None] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("profesional.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    franja: Mapped[str] = mapped_column(String(20), nullable=False)
+    estado: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="activa", server_default=text("'activa'")
+    )
+    ofrecida_hasta: Mapped[datetime.datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+
+
+class Pago(Base):
+    """Mercado Pago payment order linked to a turno (C-10)."""
+
+    __tablename__ = "pago"
+
+    id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        primary_key=True,
+        default=uuid.uuid4,
+        server_default=text("gen_random_uuid()"),
+    )
+    tenant_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("tenant.id", ondelete="RESTRICT"),
+        nullable=False,
+        index=True,
+    )
+    turno_id: Mapped[uuid.UUID] = mapped_column(
+        PG_UUID(as_uuid=True),
+        ForeignKey("turno.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
+    mp_payment_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    mp_order_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    monto: Mapped[float] = mapped_column(Numeric(12, 2), nullable=False)
+    moneda: Mapped[str] = mapped_column(
+        String(8), nullable=False, default="ARS", server_default=text("'ARS'")
+    )
+    estado: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="pendiente", server_default=text("'pendiente'")
+    )
+    created_at: Mapped[datetime.datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False, server_default=func.now()
+    )
+    acreditado_at: Mapped[datetime.datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+
+    __table_args__ = (
+        UniqueConstraint("mp_payment_id", name="uq_pago_mp_payment_id"),
     )

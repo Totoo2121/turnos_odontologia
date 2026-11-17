@@ -51,9 +51,10 @@ La fuente de verdad del dominio vive en `knowledge-base/`. **Leé el archivo rel
 | **Backend Core** | FastAPI / SQLAlchemy / Alembic / RLS | `python-fastapi-development`, `supabase-postgres-best-practices`, `tdd` |
 | **Backend Aux** | Integraciones MP/WA, PDFs, reportes | `pdf`, `supabase-postgres-best-practices`, `tdd` |
 | **Frontend** | React (turnero 24/7, odontograma, agenda) | `vercel-react-best-practices` |
+| **Agenda (cross-stack)** | Preparar, implementar o revisar cambios de turnos según RN-AG | `odontologia-reglas-negocio` (`.agents/skills/odontologia-reglas-negocio/SKILL.md`) |
 | **Orquestación** | OPSX / SDD / docs | `active-orchestrator`, `kb-creator`, `roadmap-generator`, `discovery-research`, `agents-md-generator`, `find-skills`, `web-scraper`, `skill-creator` |
 
-Cargá la skill correspondiente al contexto ANTES de escribir código.
+Cargá la skill correspondiente al contexto ANTES de escribir código. Codex descubre la skill de agenda en `.agents/skills/odontologia-reglas-negocio/`; `.opencode/skills/odontologia-reglas-negocio/` conserva la copia para OpenCode. Mantené ambas sincronizadas.
 
 > Los compact rules de cada skill los resuelve el orquestador desde `.atl/skill-registry.md` (generado por `skill-registry`; no versionado — no está en el repo). Esta tabla solo mapea skill→rol.
 
@@ -63,7 +64,7 @@ Cargá la skill correspondiente al contexto ANTES de escribir código.
 
 El plan de implementación completo está en [CHANGES.md](CHANGES.md). Resumen:
 
-- **Total**: 18 changes en 7 fases (Cimientos → Identidad y acceso → Agenda y turnos → Pagos y notificaciones → Clínica → Cierre MVP → Etapa 2).
+- **Total**: 21 changes en 9 fases (Cimientos → Identidad y acceso → Agenda y turnos → Pagos y notificaciones → Clínica → Cierre MVP → Etapa 2 → Experiencia visual → Administración).
 - **Camino crítico** (8): `C-01 → C-02 → C-03 → C-05 → C-06 → C-10 → C-16 → C-17`.
 - **Primer change**: `C-01` (foundation-setup).
 

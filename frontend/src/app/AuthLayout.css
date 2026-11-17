@@ -1,10 +1,4 @@
-.auth-layout {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.auth-layout-brand {
-  padding: 1rem;
-  font-weight: 600;
-}
+.auth-layout { min-height: 100vh; display: flex; flex-direction: column; background: radial-gradient(ellipse at 50% 38%, rgb(229 243 239 / 78%), transparent 34rem), var(--color-canvas); }
+.auth-layout-brand { display: flex; align-items: center; gap: 0.7rem; padding: 1.35rem var(--space-page); color: var(--color-ink); font-size: 0.95rem; font-weight: 750; }
+.auth-layout-brand::before { width: 0.72rem; height: 0.72rem; border-radius: 50%; background: var(--color-primary); box-shadow: 0 0 0 0.28rem var(--color-primary-soft); content: ""; }
+.auth-layout main { min-width: 0; padding: 2rem 1rem 4rem; }

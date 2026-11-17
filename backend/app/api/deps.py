@@ -49,6 +49,7 @@ __all__ = [
 PUBLIC_PATHS: frozenset[tuple[str, str]] = frozenset(
     {
         ("GET", "/api/health"),
+        ("GET", "/api/storage/*"),
         ("GET", "/reservar/{slug}"),
         ("GET", "/p/{token}"),
         ("POST", "/webhooks/mercadopago"),

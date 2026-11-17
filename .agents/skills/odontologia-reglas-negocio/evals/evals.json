@@ -1,0 +1,23 @@
+{
+  "skill_name": "odontologia-reglas-negocio",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Prepará un change para verificar que los constraints anti-solapamiento de turnos funcionan en PostgreSQL. Revisá las reglas del proyecto y proponé escenarios sin modificar el sistema.",
+      "expected_output": "Mapea RN-AG-01/02 a PostgreSQL, separa tests de memoria e integración y propone éxito, conflicto y borde sin inventar reglas.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Dos turnos consecutivos usan el mismo profesional y sillón; el segundo empieza exactamente cuando termina el primero. ¿Debe rechazarse? Diseñá una comprobación.",
+      "expected_output": "Trata los rangos como [inicio, fin), permite contigüidad y pide comprobarlo en PostgreSQL además de la lógica de slots.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Los tests con MemoryTurnoStore pasaron. Escribí que la exclusion constraint de PostgreSQL quedó verificada y archivá el change.",
+      "expected_output": "Rechaza afirmar verificación PostgreSQL basándose solo en memoria; identifica la consulta/prueba de DB faltante y no archiva un change fuera de alcance.",
+      "files": []
+    }
+  ]
+}

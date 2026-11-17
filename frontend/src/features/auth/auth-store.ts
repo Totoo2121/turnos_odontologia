@@ -33,7 +33,7 @@ interface AuthState {
   user: AuthUser | null;
   status: AuthStatus;
   error: string | null;
-  login: (email: string, password: string) => Promise<LoginResult>;
+  login: (tenantSlug: string, email: string, password: string) => Promise<LoginResult>;
   logout: () => Promise<void>;
   hydrate: () => Promise<void>;
 }
@@ -59,6 +59,7 @@ interface LoginPayload {
 
 interface MePayload {
   id?: unknown;
+  sub?: unknown;
   email?: unknown;
   roles?: unknown;
   tenantId?: unknown;
@@ -71,7 +72,8 @@ function pickAccess(payload: LoginPayload): string | null {
 }
 
 function parseUser(payload: MePayload): AuthUser | null {
-  const { id, email, roles } = payload;
+  const id = payload.id ?? payload.sub;
+  const { email, roles } = payload;
   const tenantId = payload.tenantId ?? payload.tenant_id;
   if (
     typeof id !== "string" ||
@@ -103,7 +105,8 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
   user: null,
   status: "idle",
   error: null,
-  login: async (email: string, password: string) => {
+  login: async (tenantSlug: string, email: string, password: string) => {
+    const normalizedTenantSlug = tenantSlug.trim();
     const normalizedEmail = email.trim().toLowerCase();
     set({ status: "loading", error: null });
     let response: Response;
@@ -112,7 +115,11 @@ export const useAuthStore = create<AuthState>()((set, get) => ({
         method: "POST",
         headers: { "content-type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ email: normalizedEmail, password }),
+        body: JSON.stringify({
+          tenant_slug: normalizedTenantSlug,
+          email: normalizedEmail,
+          password,
+        }),
       });
     } catch {
       clearTokens();

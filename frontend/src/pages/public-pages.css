@@ -1,0 +1,13 @@
+.public-page { width: min(52rem, calc(100% - 2rem)); min-height: 100vh; margin: 0 auto; padding: clamp(2rem, 8vw, 5.5rem) 0; }
+.public-eyebrow { margin: 0 0 0.55rem; color: var(--color-primary-hover); font-size: 0.69rem; font-weight: 780; letter-spacing: 0.13em; text-transform: uppercase; }
+.public-page h1 { margin: 0; }
+.public-subtitle { margin: 0.6rem 0 0; color: var(--color-muted); }
+.public-card-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.9rem; margin-top: 1.8rem; }
+.public-card { position: relative; min-width: 0; padding: 1.35rem; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); box-shadow: var(--shadow-soft); }
+.public-card h2 { margin: 0.5rem 0 0.35rem; color: var(--color-ink); font-size: 1.08rem; }
+.public-card p { margin: 0; color: var(--color-muted); }
+.public-step { display: inline-grid; place-items: center; width: 2rem; height: 2rem; border-radius: 50%; color: var(--color-primary-hover); background: var(--color-primary-soft); font-size: 0.72rem; font-weight: 780; }
+.public-portal-actions { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 1.8rem; }
+.public-portal-actions button:first-child { border-color: #e5c0bb; color: var(--color-danger); }
+.public-portal-actions button:first-child:hover { background: var(--color-danger-soft); }
+@media (max-width: 600px) { .public-page { width: min(52rem, calc(100% - 1.5rem)); padding-top: 2.4rem; } .public-card-grid { grid-template-columns: 1fr; } .public-portal-actions { flex-direction: column; } .public-portal-actions button { width: 100%; } }

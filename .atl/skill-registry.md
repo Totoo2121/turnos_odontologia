@@ -118,6 +118,10 @@ Pre-digested rules per skill. Delegators copy matching blocks into sub-agent pro
 - Description optimization: 20 mixed trigger/non-trigger realistic eval queries (near-miss negatives), user-reviewed, then `run_loop.py` (60/40 train/test, 3 runs each, ≤5 iters, pick by TEST score); benchmark via `aggregate_benchmark`.
 - Safety: no malware/exfiltration/misleading skills; adapt questions to user's jargon level.
 
-## Project Conventions
+## Project Skills (repo-local)
 
-_No project convention files found (no CLAUDE.md / AGENTS.md / agents.md / .cursorrules / GEMINI.md / copilot-instructions.md at project root). Expected in this first foundation pass — agent-instruction generates CLAUDE.md/AGENTS.md in the next phase. Re-run skill-registry afterwards to index them._
+| Trigger | Skill | Path |
+|---------|-------|------|
+| Preparar, implementar o revisar agenda/turnos; mapear RN-AG; evaluar constraints PostgreSQL; proponer escenarios de borde | `odontologia-reglas-negocio` | `.agents/skills/odontologia-reglas-negocio/SKILL.md` (Codex); espejo sincronizado en `.opencode/skills/odontologia-reglas-negocio/SKILL.md` |
+
+La fuente versionada es `.agents/skills/odontologia-reglas-negocio/`. Al cambiarla, actualizar el espejo de OpenCode y mantener esta entrada coherente.

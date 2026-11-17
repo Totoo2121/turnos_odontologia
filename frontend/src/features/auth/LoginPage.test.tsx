@@ -43,10 +43,10 @@ describe("LoginPage (RED 2.4)", () => {
       }
       if (url.endsWith("/api/auth/me")) {
         return jsonResponse(200, {
-          id: "u-ficticia-6",
+          sub: "u-ficticia-6",
           email: "recepcion@ficticio.test",
           roles: ["recepcion"],
-          tenantId: "t-ficticio-1",
+          tenant_id: "t-ficticio-1",
         });
       }
       throw new Error(`unexpected fetch: ${url}`);
@@ -55,6 +55,7 @@ describe("LoginPage (RED 2.4)", () => {
 
     await renderLogin("/caja");
     const userEv = userEvent.setup();
+    await userEv.type(screen.getByLabelText(/clínica/i), "clinica-ficticia");
     await userEv.type(screen.getByLabelText(/email/i), "recepcion@ficticio.test");
     await userEv.type(screen.getByLabelText(/contrase/i), "Secreta123");
     await userEv.click(screen.getByRole("button", { name: /ingresar/i }));
@@ -70,6 +71,7 @@ describe("LoginPage (RED 2.4)", () => {
 
     await renderLogin(null);
     const userEv = userEvent.setup();
+    await userEv.type(screen.getByLabelText(/clínica/i), "clinica-ficticia");
     await userEv.type(screen.getByLabelText(/email/i), "nadie@ficticio.test");
     await userEv.type(screen.getByLabelText(/contrase/i), "Wrong123");
     await userEv.click(screen.getByRole("button", { name: /ingresar/i }));
@@ -102,6 +104,7 @@ describe("LoginPage (RED 2.4)", () => {
 
     await renderLogin(null);
     const userEv = userEvent.setup();
+    await userEv.type(screen.getByLabelText(/clínica/i), "clinica-ficticia");
     await userEv.type(screen.getByLabelText(/email/i), "asistente@ficticio.test");
     await userEv.type(screen.getByLabelText(/contrase/i), "Secreta123");
     await userEv.click(screen.getByRole("button", { name: /ingresar/i }));
